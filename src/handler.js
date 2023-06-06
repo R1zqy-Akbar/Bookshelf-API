@@ -1,37 +1,43 @@
-/* eslint-disable linebreak-style */
-/* eslint-disable max-len */
-/* eslint-disable linebreak-style */
+// import nanoid dari package-nya
 const {nanoid} = require('nanoid');
+// import array books pada berkas handler.js
 const books = require('./books');
 
-const addBookHandler = (request, h) => {
+// handler 1: untuk menyimpan buku
+const saveBookHandler = (request, h) => {
+  // data yang dikirimkan oleh client
   const {
     name, year, author, summary, publisher, pageCount, readPage, reading,
   } = request.payload;
 
+  // apabila client tidak melampirkan properti name
   if (name === undefined) {
     const response = h.response({
       status: 'fail',
       message: 'Gagal menambahkan buku. Mohon isi nama buku',
     });
     response.code(400);
-
     return response;
   }
 
+  // apabila Client melampirkan nilai properti readPage 
+  // yang lebih besar dari nilai properti pageCount
   if (readPage > pageCount) {
     const response = h.response({
-      status: 'fail',
-      // eslint-disable-next-line max-len
+      status: 'fail',      
       message: 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount',
     });
     response.code(400);
-
     return response;
   }
+
+  // id unik dengan menggunakan nanoid
   const id = nanoid(16);
+  // menampung tanggal dimasukkannya buku
   const insertedAt = new Date().toISOString();
+  // menampung tanggal diperbaruinya buku
   const updatedAt = insertedAt;
+  // properti boolean, apakah buku telah selsai dibaca atau tidak
   const finished = (pageCount === readPage);
 
   const newBook = {
@@ -48,11 +54,11 @@ const addBookHandler = (request, h) => {
     insertedAt,
     updatedAt,
   };
-
   books.push(newBook);
 
+  // menentukan apakah newBook sudah masuk ke dalam array books?
   const isSuccess = books.filter((book) => book.id === id).length > 0;
-
+  // jika buku berhasil dimasukkan
   if (isSuccess) {
     const response = h.response({
       status: 'success',
@@ -64,7 +70,7 @@ const addBookHandler = (request, h) => {
     response.code(201);
     return response;
   }
-
+  // jika buku gagal dimasukkan
   const response = h.response({
     status: 'fail',
     message: 'Buku gagal ditambahkan',
@@ -73,9 +79,11 @@ const addBookHandler = (request, h) => {
   return response;
 };
 
+// handler 2: untuk menampilkan seluruh buku
 const getAllBooksHandler = (request, h) => {
   const {name, reading, finished} = request.query;
 
+  // mengembalikan respons
   if (name !== undefined) {
     const BooksName = books.filter((book) => book.name.toLowerCase().includes(name.toLowerCase()));
     const response = h
@@ -128,6 +136,8 @@ const getAllBooksHandler = (request, h) => {
     response.code(200);
     return response;
   } else {
+    // Jika belum terdapat buku yang dimasukkan, 
+    // server bisa merespons dengan array books kosong.
     const response = h.response({
       status: 'success',
       data: {
@@ -155,6 +165,7 @@ const getBookByIdHandler = (request, h) => {
     };
   }
 
+  // Bila buku dengan id yang dilampirkan oleh client tidak ditemukan
   const response = h.response({
     status: 'fail',
     message: 'Buku tidak ditemukan',
@@ -163,6 +174,7 @@ const getBookByIdHandler = (request, h) => {
   return response;
 };
 
+// handler 3: mengubah buku
 const editBookByIdHandler = (request, h) => {
   const {id} = request.params;
 
@@ -238,7 +250,7 @@ const deleteBookByIdHandler = (request, h) => {
   return response;
 };
 module.exports = {
-  addBookHandler,
+  saveBookHandler,
   getAllBooksHandler,
   getBookByIdHandler,
   editBookByIdHandler,
